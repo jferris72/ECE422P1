@@ -1,4 +1,4 @@
-import java.lang.Thread
+import java.lang.Thread;
 
 public class DataSorter {
     public static void main (String[] args) {
