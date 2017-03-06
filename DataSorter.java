@@ -110,7 +110,7 @@ public class DataSorter {
 			}
 
 			catch (Exception e2) {
-				System.out.println("System failed to sort file");
+				System.out.println("Backup Exception: System failed to sort file");
 			}
 		}
     }
@@ -137,8 +137,8 @@ class PrimaryThread extends Thread {
 	public void run() {
 
 		
-		System.out.println(Thread.currentThread().getName());
-		System.out.println(fileName);
+		// System.out.println(Thread.currentThread().getName());
+		// System.out.println(fileName);
 
 		try {
 
@@ -192,14 +192,23 @@ class BackupThread extends Thread {
 	}
 
 	public void run() {
-		System.out.println(Thread.currentThread().getName());
+		// System.out.println(Thread.currentThread().getName());
 		InsertionSort sort = new InsertionSort();
 		outarr = sort.insertsort(this.arr, this.length);
-		for(int j = 0; j < this.length; j++) {
-			System.out.println(outarr[j]);
+		// for(int j = 0; j < this.length; j++) {
+		// 	System.out.println(outarr[j]);
+		// }
+
+		try {
+			Scanner scanner = new Scanner(new File("hazard"));
+
+			while(scanner.hasNextInt()) {
+			    this.hazard = scanner.nextInt();
+			}
+		} catch (Exception e) {
+			System.out.println("failed to get hazard");
 		}
-		// this.hazard = outarr[length];
-		// System.out.println(hazard);
+
 	}
 
 	public int getHazard() {

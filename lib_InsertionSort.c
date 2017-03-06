@@ -11,7 +11,7 @@
 (JNIEnv *env, jobject object, jintArray buf, jint length) {
 
   jint *array;
-  jint *hazard = 0;
+  int hazard = 0;
   jint d, c, t;
 
   jsize len = (*env)->GetArrayLength(env, buf);
@@ -31,13 +31,15 @@
     }
   }
 
-  // array[length] = hazard;
-  printf("hazard: %d\n", hazard);
   jintArray tempArray;
   tempArray = (*env)->NewIntArray(env, len+1);
   (*env)->SetIntArrayRegion(env, tempArray, 0, len, array);
 
-  (*env)->SetIntArrayRegion(env, tempArray, len, 1, hazard);
+  FILE *fp = fopen("hazard", "w");
+
+  fprintf(fp, "%d\n", hazard);
+
+  fclose(fp);
 
   return tempArray;
 
