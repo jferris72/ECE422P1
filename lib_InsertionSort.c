@@ -11,13 +11,15 @@
 (JNIEnv *env, jobject object, jintArray buf, jint length) {
 
   jint *array;
-  int hazard = 0;
-  int d, c, t;
+  jint *hazard = 0;
+  jint d, c, t;
 
+  jsize len = (*env)->GetArrayLength(env, buf);
   array = (jint *)(*env)->GetIntArrayElements(env, buf, 0);
 
   for (c = 1 ; c <= length - 1; c++) {
     d = c;
+    hazard+= 3;
 
     while ( d > 0 && array[d] < array[d-1]) {
       t          = array[d];
@@ -25,11 +27,18 @@
       array[d-1] = t;
  
       d--;
+      hazard += 9;
     }
   }
 
   // array[length] = hazard;
+  printf("hazard: %d\n", hazard);
+  jintArray tempArray;
+  tempArray = (*env)->NewIntArray(env, len+1);
+  (*env)->SetIntArrayRegion(env, tempArray, 0, len, array);
 
-  return (jintArray)array;
+  (*env)->SetIntArrayRegion(env, tempArray, len, 1, hazard);
+
+  return tempArray;
 
 }

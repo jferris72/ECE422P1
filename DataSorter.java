@@ -20,7 +20,7 @@ public class DataSorter {
         String outputFile = args[1];
         float failurePrimary = Float.parseFloat(args[2]);
         float failureBackup = Float.parseFloat(args[3]);
-        float timeLimit = Float.parseFloat(args[4]);
+        long timeLimit = Long.parseLong(args[4]);
 
 
 
@@ -39,7 +39,7 @@ public class DataSorter {
 		}
 
 	    int [] arr = new int [length];
-	    int [] outarr = new int [length];
+	    int [] outarr;
 
 	    int j = 0;
 	    try {
@@ -63,7 +63,7 @@ public class DataSorter {
 
 		pThread.start();
 
-		tP.schedule(wdP, 1000);
+		tP.schedule(wdP, timeLimit);
 		// tB.schedule(wdB, 1000);
 
 		try {
@@ -78,7 +78,7 @@ public class DataSorter {
 				outarr = pThread.getArray();
 				PrintWriter writer = new PrintWriter(outputFile, "UTF-8");
 				for (int i = 0; i < length; i++) {
-					writer.println(Integer.toString(outarr[i]));
+					writer.println(outarr[i]);
 				}
 				writer.close();
 			}
@@ -90,21 +90,20 @@ public class DataSorter {
 			WatchDog wdB = new WatchDog(bThread);
 			Timer tB = new Timer();
 			bThread.start();
-			tB.schedule(wdB, 1000);
+			tB.schedule(wdB, timeLimit);
 			try {
 				bThread.join();
 				tB.cancel();
 
 				Random generator = new Random();
 				double failCheck = generator.nextDouble();
-				System.out.println("Hazard" + pThread.getHazard());
 				if(failCheck < 0.5 + (failurePrimary * bThread.getHazard()) && failCheck > 0.5) {
 					throw new Exception();
 				} else {
 					outarr = bThread.getArray();
 					PrintWriter writer = new PrintWriter(outputFile, "UTF-8");
 					for (int i = 0; i < length; i++) {
-						writer.println(Integer.toString(outarr[i]));
+						writer.println(outarr[i]);
 					}
 					writer.close();
 				}
@@ -143,7 +142,7 @@ class PrimaryThread extends Thread {
 
 		try {
 
-			this.arr = new int [this.length];
+			// this.arr = new int [this.length];
 
 			HeapSort heapSort = new HeapSort();
 
@@ -151,9 +150,9 @@ class PrimaryThread extends Thread {
 
 
 
-			for(int j = 0; j < this.length; j++) {
-				System.out.println(Integer.toString(arr[j]));
-			}
+			// for(int j = 0; j < this.length; j++) {
+			// 	System.out.println(Integer.toString(arr[j]));
+			// }
 
 			this.hazard = heapSort.getHazard();
 		} 
@@ -190,14 +189,17 @@ class BackupThread extends Thread {
 		this.hazard = 0;
 		this.length = length;
 		this.arr = arr;
-		this.outarr = new int [length + 1];
 	}
 
 	public void run() {
 		System.out.println(Thread.currentThread().getName());
 		InsertionSort sort = new InsertionSort();
-		this.outarr = sort.insertsort(this.arr, this.length);
-		this.hazard = outarr[length+1];
+		outarr = sort.insertsort(this.arr, this.length);
+		for(int j = 0; j < this.length; j++) {
+			System.out.println(outarr[j]);
+		}
+		// this.hazard = outarr[length];
+		// System.out.println(hazard);
 	}
 
 	public int getHazard() {
@@ -205,7 +207,7 @@ class BackupThread extends Thread {
 	}
 
 	public int[] getArray() {
-		return this.arr;
+		return this.outarr;
 	}
 }
 
