@@ -4,11 +4,16 @@ import java.io.File;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.io.PrintWriter;
+
 
 
 
 
 public class DataSorter {
+	static {
+    	System.loadLibrary("insertsort");
+    }
 
     public static void main (String[] args) {
         String inputFile = args[0];
@@ -17,22 +22,37 @@ public class DataSorter {
         float failureBackup = Float.parseFloat(args[3]);
         float timeLimit = Float.parseFloat(args[4]);
 
+
+
         //Get length of file by running through each int
         int length = 0;
+
         try {
 			Scanner scanner = new Scanner(new File(inputFile));
 			while(scanner.hasNextInt()) {
 		       length++;
-		        scanner.nextInt();
+		       scanner.nextInt();
 		    }
+		} catch (Exception e) {
+			System.out.println("failed to open file");
+			return;
+		}
+
+	    int [] arr = new int [length];
+	    int [] outarr = new int [length];
+
+	    int j = 0;
+	    try {
+			Scanner scanner = new Scanner(new File(inputFile));
+
+			while(scanner.hasNextInt()) {
+			    arr[j++] = scanner.nextInt();
+			}
 		} catch (Exception e) {
 			System.out.println("failed to open file");
 		}
 
-	    int [] arr = new int [length];
-
-        PrimaryThread pThread = new PrimaryThread("pThread", inputFile, failurePrimary, length);
-        BackupThread bThread = new BackupThread("bThread");
+        PrimaryThread pThread = new PrimaryThread("pThread", inputFile, failurePrimary, length, arr);
         // WatchDogThread wdThread = new WatchDogThread("WatchDogThread", pThread, bThread);
 
         WatchDog wdP = new WatchDog(pThread);
@@ -54,10 +74,19 @@ public class DataSorter {
 			double failCheck = generator.nextDouble();
 			if(failCheck < 0.5 + (failurePrimary * pThread.getHazard()) && failCheck > 0.5) {
 				throw new Exception();
+			} else {
+				outarr = pThread.getArray();
+				PrintWriter writer = new PrintWriter(outputFile, "UTF-8");
+				for (int i = 0; i < length; i++) {
+					writer.println(Integer.toString(outarr[i]));
+				}
+				writer.close();
 			}
 		}
 
 		catch (Exception e) {
+			System.out.println("Primary Exception");
+			BackupThread bThread = new BackupThread("bThread", length, arr);
 			WatchDog wdB = new WatchDog(bThread);
 			Timer tB = new Timer();
 			bThread.start();
@@ -69,13 +98,20 @@ public class DataSorter {
 				Random generator = new Random();
 				double failCheck = generator.nextDouble();
 				System.out.println("Hazard" + pThread.getHazard());
-				if(failCheck < 0.5 + (failurePrimary * pThread.getHazard()) && failCheck > 0.5) {
+				if(failCheck < 0.5 + (failurePrimary * bThread.getHazard()) && failCheck > 0.5) {
 					throw new Exception();
+				} else {
+					outarr = bThread.getArray();
+					PrintWriter writer = new PrintWriter(outputFile, "UTF-8");
+					for (int i = 0; i < length; i++) {
+						writer.println(Integer.toString(outarr[i]));
+					}
+					writer.close();
 				}
 			}
 
 			catch (Exception e2) {
-
+				System.out.println("System failed to sort file");
 			}
 		}
     }
@@ -90,12 +126,13 @@ class PrimaryThread extends Thread {
 
 	PrimaryThread() {}
 
-	PrimaryThread(String threadName, String fileName, float fail, int length) {
+	PrimaryThread(String threadName, String fileName, float fail, int length, int[] arr) {
 		super(threadName);
 		this.fileName = fileName;
 		this.fail = fail;
 		this.length = length;
 		this.hazard = 0;
+		this.arr = arr;
 	}
 
 	public void run() {
@@ -106,13 +143,7 @@ class PrimaryThread extends Thread {
 
 		try {
 
-			this.arr = new int [length];
-			int i = 0;
-			Scanner scanner = new Scanner(new File(fileName));
-
-			while(scanner.hasNextInt()) {
-		        arr[i++] = scanner.nextInt();
-			}
+			this.arr = new int [this.length];
 
 			HeapSort heapSort = new HeapSort();
 
@@ -120,9 +151,9 @@ class PrimaryThread extends Thread {
 
 
 
-			for(int j = 0; j < i; j++) {
-				System.out.println(Integer.toString(arr[j]));
-			}
+			// for(int j = 0; j < i; j++) {
+			// 	System.out.println(Integer.toString(arr[j]));
+			// }
 
 			this.hazard = heapSort.getHazard();
 		} 
@@ -147,15 +178,34 @@ class PrimaryThread extends Thread {
 }
 
 class BackupThread extends Thread {
+	private int hazard;
+	private int length;
+	private int[] arr;
+	private int[] outarr;
 
 	BackupThread() {}
 
-	BackupThread(String threadName) {
+	BackupThread(String threadName, int length, int[] arr) {
 		super(threadName);
+		this.hazard = 0;
+		this.length = length;
+		this.arr = arr;
+		this.outarr = new int [length + 1];
 	}
 
 	public void run() {
 		System.out.println(Thread.currentThread().getName());
+		InsertionSort sort = new InsertionSort();
+		this.outarr = sort.insertsort(this.arr, this.length);
+		this.hazard = outarr[length+1];
+	}
+
+	public int getHazard() {
+		return this.hazard;
+	}
+
+	public int[] getArray() {
+		return this.arr;
 	}
 }
 
@@ -180,29 +230,29 @@ class WatchDog extends TimerTask {
 
 }
 
-class WatchDogThread extends Thread {
-	private Thread watchedThreadP;
-	private Thread watchedThreadB;
+// class WatchDogThread extends Thread {
+// 	private Thread watchedThreadP;
+// 	private Thread watchedThreadB;
 
-	WatchDogThread() {}
+// 	WatchDogThread() {}
 
-	WatchDogThread(String threadName, Thread watchedThreadP, Thread watchedThreadB) {
-		super(threadName);
-		this.watchedThreadP = watchedThreadP;
-		this.watchedThreadB = watchedThreadB;
-		start();
-	}
+// 	WatchDogThread(String threadName, Thread watchedThreadP, Thread watchedThreadB) {
+// 		super(threadName);
+// 		this.watchedThreadP = watchedThreadP;
+// 		this.watchedThreadB = watchedThreadB;
+// 		start();
+// 	}
 
-	public void run() {
-		System.out.println(Thread.currentThread().getName());
-		WatchDog wdP = new WatchDog(watchedThreadP);
-		WatchDog wdB = new WatchDog(watchedThreadB);
+// 	public void run() {
+// 		System.out.println(Thread.currentThread().getName());
+// 		WatchDog wdP = new WatchDog(watchedThreadP);
+// 		WatchDog wdB = new WatchDog(watchedThreadB);
 
-		Timer tP = new Timer();
-		Timer tB = new Timer();
+// 		Timer tP = new Timer();
+// 		Timer tB = new Timer();
 
-		tP.schedule(wdP, 1000);
-		tB.schedule(wdB, 1000);
-	}
-}
+// 		tP.schedule(wdP, 1000);
+// 		tB.schedule(wdB, 1000);
+// 	}
+// }
 
