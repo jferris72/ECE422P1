@@ -1,5 +1,0 @@
-javac *.java
-javah InsertionSort
-JAVA_HOME = /usr/lib/jvm/java-8-openjdk-amd64
-gcc -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/linux -shared -fpic -o libinsertsort.so InsertionSort.c
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.

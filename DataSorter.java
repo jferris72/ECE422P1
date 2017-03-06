@@ -151,9 +151,9 @@ class PrimaryThread extends Thread {
 
 
 
-			// for(int j = 0; j < i; j++) {
-			// 	System.out.println(Integer.toString(arr[j]));
-			// }
+			for(int j = 0; j < this.length; j++) {
+				System.out.println(Integer.toString(arr[j]));
+			}
 
 			this.hazard = heapSort.getHazard();
 		} 
