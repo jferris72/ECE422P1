@@ -18,10 +18,15 @@
     {    
 
         private static int N;
+        private int hazard;
+
+        public HeapSort() {
+            this.hazard = 0;
+        }
 
         /* Sort Function */
 
-        public static void sort(int arr[])
+        public void sort(int arr[])
 
         {       
 
@@ -35,6 +40,8 @@
 
                 N = N-1;
 
+                hazard++;
+
                 maxheap(arr, 0);
 
             }
@@ -43,37 +50,46 @@
 
         /* Function to build a heap */   
 
-        public static void heapify(int arr[])
+        public void heapify(int arr[])
 
         {
 
             N = arr.length-1;
 
-            for (int i = N/2; i >= 0; i--)
+            hazard++;
 
-                maxheap(arr, i);        
+            for (int i = N/2; i >= 0; i--) maxheap(arr, i);
+
+            hazard++;        
 
         }
 
         /* Function to swap largest element in heap */        
 
-        public static void maxheap(int arr[], int i)
+        public void maxheap(int arr[], int i)
 
         { 
 
             int left = 2*i ;
 
+            hazard++;
+
             int right = 2*i + 1;
+
+            hazard++;
 
             int max = i;
 
-            if (left <= N && arr[left] > arr[i])
+            hazard++;
 
-                max = left;
+            if (left <= N && arr[left] > arr[i]) max = left;
 
-            if (right <= N && arr[right] > arr[max])        
+            hazard++;
 
-                max = right;
+            if (right <= N && arr[right] > arr[max]) max = right;
+
+            hazard++;
+
 
      
 
@@ -87,19 +103,30 @@
 
             }
 
+
         }    
 
         /* Function to swap two numbers in an array */
 
-        public static void swap(int arr[], int i, int j)
+        public void swap(int arr[], int i, int j)
 
         {
 
             int tmp = arr[i];
 
+            hazard++;
+
             arr[i] = arr[j];
+
+            hazard++;
 
             arr[j] = tmp; 
 
+            hazard++;
+
         }      
+
+        public int getHazard() {
+            return this.hazard;
+        }
     }

@@ -1,6 +1,7 @@
 
 
 /* insertion sort ascending order */
+// code from: http://www.programmingsimplified.com/c/source-code/c-program-insertion-sort
  
 #include <stdio.h>
  
